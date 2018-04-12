@@ -1,0 +1,40 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+.App {
+  margin-top: 0;
+  transition: margin-top 0.4s ease;
+}
+
+.App.offset {
+  margin-top: -64px;
+}
+
+.search-box {
+  text-align: center;
+  padding: 8px;
+}
+
+.search-button {
+  width: 48px;
+  display: inline-block;
+  transform: translateY(-4px);
+}
+
+.result {
+  padding: 8px;
+}
+
+.result div {
+  margin: 8px;
+}
+
+@media (min-width: 768px) and (orientation: landscape) {
+  .result {
+      width: 50%;
+      margin: 0 auto;
+  }
+}
