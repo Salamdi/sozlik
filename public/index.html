@@ -58,4 +58,11 @@
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
   </body>
+  <script>
+    function handleTouchstart(event) {
+      document.getElementsByTagName('input')[0].blur()
+    }
+    document.documentElement.ontouchstart = handleTouchstart
+    document.body.ontouchstart = handleTouchstart
+  </script>
 </html>
