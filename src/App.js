@@ -5,6 +5,7 @@ import RaisedButton from 'material-ui/RaisedButton'
 import Search from 'material-ui/svg-icons/action/search'
 import {debounce} from 'lodash'
 import {Card, CardHeader, CardText} from 'material-ui/Card'
+import axios from 'axios'
 
 class App extends Component {
   constructor(props) {
@@ -14,15 +15,30 @@ class App extends Component {
       searchVal: '',
       results: [],
       focus: false,
+      randomWord: undefined,
     }
     this.debouncedSearch = debounce(this.search, 400)
   }
 
+  componentDidMount() {
+    axios
+      .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRuRandom`)
+      .then(result => result.data)
+      .then(response => response.word)
+      .then(word => word.ru)
+      .then(randomWord => this.setState({randomWord}))
+      .catch(err => {
+        console.error(err)
+        this.setState({randomWord: 'авиация'})
+      })
+  }
+
   search = (val) => {
     if (val.trim()) {
-      fetch(`https://us-central1-ng-dictionary.cloudfunctions.net/getDict?query=${val}&count=3`)
-        .then(res => res.json())
-        .then(data => this.setState({dataSource: data}))
+      axios
+        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRu?query=${val}&start=0&count=3`)
+        .then(result => result.data)
+        .then(response => this.setState({dataSource: response.data}))
         .catch(err => console.error(err))
     }
   }
@@ -31,7 +47,11 @@ class App extends Component {
     if (index !== -1) {
       this.setState(prevState => ({results: [req]}))
     } else {
-      console.log(req)
+      axios
+        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRu?query=${this.state.searchVal}&start=0&count=30`)
+        .then(result => result.data)
+        .then(response => this.setState({results: response.data}))
+        .catch(err => console.error(err))
     }
   }
 
@@ -66,7 +86,7 @@ class App extends Component {
                 this.setState({focus: false})
                 container.ontouchmove = event => true
               }}
-              hintText='Мысалы: авиация'
+              hintText={`Мысалы: ${this.state.randomWord}`}
               floatingLabelText='Кайсы соьзди излейсинъиз?'
               dataSource={this.state.dataSource}
               onUpdateInput={this.handleUpdate}
@@ -80,6 +100,7 @@ class App extends Component {
                 primary
                 icon={<Search/>}
                 onClick={this.handleClick}
+                disabled={!this.state.searchVal}
               />
             </div>
           </div>
