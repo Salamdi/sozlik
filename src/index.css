@@ -32,6 +32,12 @@ html, body {
   margin: 8px;
 }
 
+.progress-bar {
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
 @media (min-width: 768px) and (orientation: landscape) {
   .result {
       width: 50%;

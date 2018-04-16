@@ -3,9 +3,11 @@ import AppBar from 'material-ui/AppBar'
 import AutoComplete from 'material-ui/AutoComplete'
 import RaisedButton from 'material-ui/RaisedButton'
 import Search from 'material-ui/svg-icons/action/search'
-import {debounce} from 'lodash'
-import {Card, CardHeader, CardText} from 'material-ui/Card'
+import { debounce } from 'lodash'
+import { Card, CardHeader, CardText } from 'material-ui/Card'
 import axios from 'axios'
+import LinearProgress from 'material-ui/LinearProgress'
+import CircularProgress from 'material-ui/CircularProgress'
 
 class App extends Component {
   constructor(props) {
@@ -22,36 +24,44 @@ class App extends Component {
 
   componentDidMount() {
     axios
-      .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRuRandom`)
+      .get(`http://46.36.220.65:8080/getRuRandom`)
       .then(result => result.data)
       .then(response => response.word)
       .then(word => word.ru)
-      .then(randomWord => this.setState({randomWord}))
+      .then(randomWord => this.setState({ randomWord }))
       .catch(err => {
         console.error(err)
-        this.setState({randomWord: 'авиация'})
+        this.setState({ randomWord: 'авиация' })
       })
   }
 
   search = (val) => {
     if (val.trim()) {
+      this.setState({ progresBar: true })
       axios
-        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRu?query=${val}&start=0&count=3`)
+        .get(`http://46.36.220.65:8080/getRu?query=${val}&start=0&count=3`)
         .then(result => result.data)
-        .then(response => this.setState({dataSource: response.data}))
-        .catch(err => console.error(err))
+        .then(response => this.setState({ dataSource: response.data, progresBar: false }))
+        .catch(err => {
+          console.error(err)
+          this.setState({ progresBar: false })
+        })
     }
   }
 
   handleRequest = (req, index) => {
     if (index !== -1) {
-      this.setState(prevState => ({results: [req]}))
+      this.setState(prevState => ({ results: [req] }))
     } else {
+      this.setState({ circularProgress: true })
       axios
-        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRu?query=${this.state.searchVal}&start=0&count=30`)
+        .get(`http://46.36.220.65:8080/getRu?query=${this.state.searchVal}&start=0&count=30`)
         .then(result => result.data)
-        .then(response => this.setState({results: response.data}))
-        .catch(err => console.error(err))
+        .then(response => this.setState({ results: response.data.length ? response.data : [{ru: '', ng: 'Бу соьз соьзликте йок ):'}], circularProgress: false }))
+        .catch(err => {
+          console.error(err)
+          this.setState({ circularProgress: false })
+        })
     }
   }
 
@@ -62,7 +72,7 @@ class App extends Component {
   }
 
   handleUpdate = (value, data, params) => {
-    this.setState({searchVal: value})
+    this.setState({ searchVal: value })
     if (params.source === 'change') {
       this.debouncedSearch(value)
     }
@@ -76,21 +86,24 @@ class App extends Component {
           <AppBar
             title='Соьзлик'
           />
+          <div className='progress-bar'>
+            {this.state.progresBar ? <LinearProgress mode="indeterminate" style={{ borderRadius: 'none' }} /> : null}
+          </div>
           <div className='search-box'>
             <AutoComplete
               onFocus={() => {
-                this.setState({focus: true})
+                this.setState({ focus: true })
                 container.ontouchmove = event => false
               }}
               onBlur={() => {
-                this.setState({focus: false})
+                this.setState({ focus: false })
                 container.ontouchmove = event => true
               }}
               hintText={`Мысалы: ${this.state.randomWord}`}
               floatingLabelText='Кайсы соьзди излейсинъиз?'
               dataSource={this.state.dataSource}
               onUpdateInput={this.handleUpdate}
-              dataSourceConfig = {{text: 'ru', value: 'ng'}}
+              dataSourceConfig={{ text: 'ru', value: 'ng' }}
               onNewRequest={this.handleRequest}
               filter={AutoComplete.caseInsensitiveFilter}
             />
@@ -98,25 +111,31 @@ class App extends Component {
               <RaisedButton
                 fullWidth
                 primary
-                icon={<Search/>}
+                icon={<Search />}
                 onClick={this.handleClick}
                 disabled={!this.state.searchVal}
               />
             </div>
           </div>
         </div>
-        <main className='result'>
-          {
-            this.state.results.map(res => (
-              <Card key={res.ng}>
-                <CardHeader subtitle={res.ru} />
-                <CardText>
-                  {res.ng}
-                </CardText>
-              </Card>
-            ))
-          }
-        </main>
+        {
+          this.state.circularProgress
+            ? <CircularProgress size={80} thickness={5} />
+            : (
+              <main className='result'>
+                {
+                  this.state.results.map(res => (
+                    <Card key={res.ng}>
+                      <CardHeader subtitle={res.ru} />
+                      <CardText>
+                        {res.ng}
+                      </CardText>
+                    </Card>
+                  ))
+                }
+              </main>
+            )
+        }
       </div>
     );
   }
