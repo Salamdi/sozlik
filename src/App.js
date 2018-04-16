@@ -8,6 +8,10 @@ import { Card, CardHeader, CardText } from 'material-ui/Card'
 import axios from 'axios'
 import LinearProgress from 'material-ui/LinearProgress'
 import CircularProgress from 'material-ui/CircularProgress'
+import Drawer from 'material-ui/Drawer'
+import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton'
+import NavigationClose from 'material-ui/svg-icons/navigation/close'
+import IconButton from 'material-ui/IconButton'
 
 class App extends Component {
   constructor(props) {
@@ -79,26 +83,53 @@ class App extends Component {
   }
 
   render() {
-    let container;
     return (
-      <div className={this.state.focus ? 'App offset' : 'App'} ref={ref => container = ref} >
+      <div className={this.state.focus ? 'App offset' : 'App'} >
+      <Drawer
+        docked={false}
+        width={200}
+        open={this.state.drawer}
+        onRequestChange={(open) => this.setState({drawer: open})}
+      >
+        <AppBar
+          showMenuIconButton={false}
+          iconElementRight={
+            <IconButton onClick={() => this.setState({drawer: false})} >
+              <NavigationClose />
+            </IconButton>
+          }
+        />
+        <RadioButtonGroup
+          name='lang'
+          defaultSelected='ru-ng'
+          className='radio-container'
+        >
+          <RadioButton
+            value='ru-ng'
+            label='орысша - ногайша'
+          />
+          <RadioButton
+            value='ng-ru'
+            label='ногайша - орысша'
+            disabled
+          />
+        </RadioButtonGroup>
+        <p className='copyright'>
+          © Dinislam
+        </p>
+      </Drawer>
         <div className='top-container'>
           <AppBar
             title='Соьзлик'
+            onLeftIconButtonClick={event => this.setState({drawer: true})}
           />
           <div className='progress-bar'>
             {this.state.progresBar ? <LinearProgress mode="indeterminate" style={{ borderRadius: 'none' }} /> : null}
           </div>
           <div className='search-box'>
             <AutoComplete
-              onFocus={() => {
-                this.setState({ focus: true })
-                container.ontouchmove = event => false
-              }}
-              onBlur={() => {
-                this.setState({ focus: false })
-                container.ontouchmove = event => true
-              }}
+              onFocus={() => this.setState({ focus: true })}
+              onBlur={() => this.setState({ focus: false })}
               hintText={`Мысалы: ${this.state.randomWord}`}
               floatingLabelText='Кайсы соьзди излейсинъиз?'
               dataSource={this.state.dataSource}
@@ -120,7 +151,11 @@ class App extends Component {
         </div>
         {
           this.state.circularProgress
-            ? <CircularProgress size={80} thickness={5} />
+            ? (
+              <div className='circular-progress'>
+                <CircularProgress size={80} thickness={5} />
+              </div>
+            )
             : (
               <main className='result'>
                 {

@@ -38,6 +38,25 @@ html, body {
   width: 100%;
 }
 
+.circular-progress {
+  padding-top: 24px;
+  text-align: center;
+}
+
+.radio-container {
+  padding: 16px;
+}
+
+.radio-container > div {
+  margin-top: 24px;
+}
+
+.copyright {
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+}
+
 @media (min-width: 768px) and (orientation: landscape) {
   .result {
       width: 50%;
