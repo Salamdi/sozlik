@@ -40,7 +40,7 @@ class App extends Component {
   }
 
   search = (val) => {
-    if (val.trim()) {
+    if (val) {
       this.setState({ progresBar: true })
       axios
         .get(`http://46.36.220.65:8080/getRu?query=${val}&start=0&count=3`)
@@ -76,9 +76,9 @@ class App extends Component {
   }
 
   handleUpdate = (value, data, params) => {
-    this.setState({ searchVal: value })
+    this.setState({ searchVal: value.trim() })
     if (params.source === 'change') {
-      this.debouncedSearch(value)
+      this.debouncedSearch(value.trim())
     }
   }
 

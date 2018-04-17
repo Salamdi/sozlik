@@ -8,6 +8,8 @@
 
 # production
 /build
+/docs
+docs.zip
 
 # misc
 .DS_Store
