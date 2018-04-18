@@ -32,6 +32,11 @@ html, body {
   margin: 8px;
 }
 
+.top-container {
+  margin-top: 64px;
+  position: relative;
+}
+
 .progress-bar {
   position: absolute;
   top: 0;

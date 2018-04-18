@@ -140,11 +140,16 @@ class App extends Component {
           onActionClick={() => this.setState({snackbar: false})}
           onRequestClose={() => this.setState({snackbar: false})}
         />
+        <AppBar
+          style={{
+            position: 'fixed',
+            top: this.state.focus ? -64 : 0,
+            transition: 'all ease 0.4s'
+          }}
+          title='Соьзлик'
+          onLeftIconButtonClick={event => this.setState({drawer: true})}
+        />
         <div className='top-container'>
-          <AppBar
-            title='Соьзлик'
-            onLeftIconButtonClick={event => this.setState({drawer: true})}
-          />
           <div className='progress-bar'>
             {this.state.progresBar ? <LinearProgress mode="indeterminate" style={{ borderRadius: 'none' }} /> : null}
           </div>
