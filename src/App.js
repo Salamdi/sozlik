@@ -28,7 +28,7 @@ class App extends Component {
 
   componentDidMount() {
     axios
-      .get(`http://46.36.220.65:8080/getRuRandom`)
+      .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRuRandom`)
       .then(result => result.data)
       .then(response => response.word)
       .then(word => word.ru)
@@ -36,6 +36,7 @@ class App extends Component {
       .catch(err => {
         console.error(err)
         this.setState({ randomWord: 'авиация' })
+        console.log('Серверга йолыкпага болынмады...')
       })
   }
 
@@ -43,7 +44,7 @@ class App extends Component {
     if (val) {
       this.setState({ progresBar: true })
       axios
-        .get(`http://46.36.220.65:8080/getRu?query=${val}&start=0&count=3`)
+        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRu?query=${val}&start=0&count=3`)
         .then(result => result.data)
         .then(response => this.setState({ dataSource: response.data, progresBar: false }))
         .catch(err => {
@@ -59,12 +60,13 @@ class App extends Component {
     } else {
       this.setState({ circularProgress: true })
       axios
-        .get(`http://46.36.220.65:8080/getRu?query=${this.state.searchVal}&start=0&count=30`)
+        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRu?query=${this.state.searchVal}&start=0&count=30`)
         .then(result => result.data)
         .then(response => this.setState({ results: response.data.length ? response.data : [{ru: '', ng: 'Бу соьз соьзликте йок ):'}], circularProgress: false }))
         .catch(err => {
           console.error(err)
           this.setState({ circularProgress: false })
+          console.log('Серверга йолыкпага болынмады...')
         })
     }
   }

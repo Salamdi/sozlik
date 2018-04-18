@@ -8,7 +8,6 @@
 
 # production
 /build
-/docs
 docs.zip
 
 # misc
