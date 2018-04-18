@@ -17,14 +17,16 @@ import Snackbar from 'material-ui/Snackbar'
 class App extends Component {
   constructor(props) {
     super(props)
-    this.state = {
+    const preserverState = localStorage.getItem('preservedState') && JSON.parse(localStorage.getItem('preservedState'))
+    this.state = preserverState || {
       dataSource: [],
       searchVal: '',
       results: [],
       focus: false,
       randomWord: undefined,
     }
-    this.debouncedSearch = debounce(this.search, 400)
+    this.search = debounce(this.search, 400)
+    this.saveState = debounce(this.saveState, 1000)
   }
 
   componentDidMount() {
@@ -36,9 +38,15 @@ class App extends Component {
       .then(randomWord => this.setState({ randomWord }))
       .catch(err => {
         console.error(err)
-        this.setState({ randomWord: 'авиация' })
-        console.log('Серверга йолыкпага болынмады...')
       })
+  }
+
+  saveState() {
+    localStorage.setItem('preservedState', JSON.stringify(this.state))
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    this.saveState()
   }
 
   search = (val) => {
@@ -84,7 +92,7 @@ class App extends Component {
   handleUpdate = (value, data, params) => {
     this.setState({ searchVal: value.trim() })
     if (params.source === 'change') {
-      this.debouncedSearch(value.trim())
+      this.search(value.trim())
     }
   }
 
@@ -126,7 +134,7 @@ class App extends Component {
         </Drawer>
         <Snackbar
           open={this.state.snackbar || false}
-          message='Интернет йок усайды...'
+          message='Серверман косылмага болынмады...'
           action='аьруьв'
           autoHideDuration={4000}
           onActionClick={() => this.setState({snackbar: false})}
@@ -144,13 +152,14 @@ class App extends Component {
             <AutoComplete
               onFocus={() => this.setState({ focus: true })}
               onBlur={() => this.setState({ focus: false })}
-              hintText={`Мысалы: ${this.state.randomWord}`}
+              hintText={`Мысалы: ${this.state.randomWord || 'авиация'}`}
               floatingLabelText='Кайсы соьзди излейсинъиз?'
               dataSource={this.state.dataSource}
               onUpdateInput={this.handleUpdate}
               dataSourceConfig={{ text: 'ru', value: 'ng' }}
               onNewRequest={this.handleRequest}
               filter={AutoComplete.caseInsensitiveFilter}
+              searchText={this.state.searchVal}
             />
             <div className='search-button'>
               <RaisedButton
