@@ -9,7 +9,7 @@ import axios from 'axios'
 import LinearProgress from 'material-ui/LinearProgress'
 import CircularProgress from 'material-ui/CircularProgress'
 import Drawer from 'material-ui/Drawer'
-import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton'
+import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton'
 import NavigationClose from 'material-ui/svg-icons/navigation/close'
 import IconButton from 'material-ui/IconButton'
 import Snackbar from 'material-ui/Snackbar'
@@ -18,24 +18,25 @@ class App extends Component {
   constructor(props) {
     super(props)
     const preserverState = localStorage.getItem('preservedState') && JSON.parse(localStorage.getItem('preservedState'))
-    this.state = preserverState || {
-      dataSource: [],
-      searchVal: '',
-      results: [],
-      focus: false,
-      randomWord: undefined,
-    }
+    this.state = preserverState && preserverState.randomWords
+      ? preserverState
+      : {
+        dataSource: [],
+        searchVal: '',
+        results: [],
+        focus: false,
+        randomWords: {},
+        dictionary: 'ng-ru'
+      }
     this.search = debounce(this.search, 400)
     this.saveState = debounce(this.saveState, 1000)
   }
 
   componentDidMount() {
     axios
-      .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRuRandom`)
+      .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRandom`)
       .then(result => result.data)
-      .then(response => response.word)
-      .then(word => word.ru)
-      .then(randomWord => this.setState({ randomWord }))
+      .then(randomWords => this.setState({ randomWords }))
       .catch(err => {
         console.error(err)
       })
@@ -50,10 +51,11 @@ class App extends Component {
   }
 
   search = (val) => {
+    console.log(this.state.dictionary)
     if (val) {
       this.setState({ progresBar: true })
       axios
-        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRu?query=${val}&start=0&count=3`)
+        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/${this.state.dictionary === 'ng-ru' ? 'getNg' : 'getRu'}?query=${val}&start=0&count=3`)
         .then(result => result.data)
         .then(response => this.setState({ dataSource: response.data, progresBar: false }))
         .catch(err => {
@@ -69,15 +71,15 @@ class App extends Component {
     } else {
       this.setState({ circularProgress: true })
       axios
-        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRu?query=${this.state.searchVal}&start=0&count=30`)
+        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/${this.state.dictionary === 'ng-ru' ? 'getNg' : 'getRu'}?query=${this.state.searchVal}&start=0&count=30`)
         .then(result => result.data)
-        .then(response => this.setState({ results: response.data.length ? response.data : [{ru: '', ng: 'Бу соьз соьзликте йок ):'}], circularProgress: false }))
+        .then(response => this.setState({ results: response.data.length ? response.data : [{ term: '', description: 'Бу соьз соьзликте йок ):' }], circularProgress: false }))
         .catch(err => {
           console.error('error occured:', err)
           this.setState({ circularProgress: false })
           if (err.message === 'Failed to fetch' || err.message === 'Network Error') {
             console.log(err.message)
-            this.setState({snackbar: true})
+            this.setState({ snackbar: true })
           }
         })
     }
@@ -90,7 +92,7 @@ class App extends Component {
   }
 
   handleUpdate = (value, data, params) => {
-    this.setState({ searchVal: value.trim() })
+    this.setState({ searchVal: value.trim(), dataSource: [] })
     if (params.source === 'change') {
       this.search(value.trim())
     }
@@ -103,29 +105,29 @@ class App extends Component {
           docked={false}
           width={200}
           open={this.state.drawer}
-          onRequestChange={(open) => this.setState({drawer: open})}
+          onRequestChange={(open) => this.setState({ drawer: open })}
         >
           <AppBar
             showMenuIconButton={false}
             iconElementRight={
-              <IconButton onClick={() => this.setState({drawer: false})} >
+              <IconButton onClick={() => this.setState({ drawer: false })} >
                 <NavigationClose />
               </IconButton>
             }
           />
           <RadioButtonGroup
             name='lang'
-            defaultSelected='ru-ng'
             className='radio-container'
+            defaultSelected={this.state.dictionary || 'ng-ru'}
+            onChange={(event, dictionary) => this.setState({ dictionary })}
           >
-            <RadioButton
-              value='ru-ng'
-              label='орысша - ногайша'
-            />
             <RadioButton
               value='ng-ru'
               label='ногайша - орысша'
-              disabled
+            />
+            <RadioButton
+              value='ru-ng'
+              label='орысша - ногайша'
             />
           </RadioButtonGroup>
           <p className='copyright'>
@@ -137,8 +139,8 @@ class App extends Component {
           message='Серверман косылмага болынмады...'
           action='аьруьв'
           autoHideDuration={4000}
-          onActionClick={() => this.setState({snackbar: false})}
-          onRequestClose={() => this.setState({snackbar: false})}
+          onActionClick={() => this.setState({ snackbar: false })}
+          onRequestClose={() => this.setState({ snackbar: false })}
         />
         <AppBar
           style={{
@@ -147,7 +149,7 @@ class App extends Component {
             transition: 'all ease 0.4s'
           }}
           title='Соьзлик'
-          onLeftIconButtonClick={event => this.setState({drawer: true})}
+          onLeftIconButtonClick={event => this.setState({ drawer: true })}
         />
         <div className='top-container'>
           <div className='progress-bar'>
@@ -157,11 +159,11 @@ class App extends Component {
             <AutoComplete
               onFocus={() => this.setState({ focus: true })}
               onBlur={() => this.setState({ focus: false })}
-              hintText={`Мысалы: ${this.state.randomWord || 'авиация'}`}
+              hintText={`Мысалы: ${this.state.randomWords[this.state.dictionary]}`}
               floatingLabelText='Кайсы соьзди излейсинъиз?'
               dataSource={this.state.dataSource}
               onUpdateInput={this.handleUpdate}
-              dataSourceConfig={{ text: 'ru', value: 'ng' }}
+              dataSourceConfig={{ text: 'term', value: 'description' }}
               onNewRequest={this.handleRequest}
               filter={AutoComplete.caseInsensitiveFilter}
               searchText={this.state.searchVal}
@@ -188,10 +190,10 @@ class App extends Component {
               <main className='result'>
                 {
                   this.state.results.map(res => (
-                    <Card key={res.ng}>
-                      <CardHeader subtitle={res.ru} />
+                    <Card key={res.description}>
+                      <CardHeader subtitle={res.term} />
                       <CardText>
-                        {res.ng}
+                        {res.description}
                       </CardText>
                     </Card>
                   ))
