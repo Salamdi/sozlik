@@ -165,11 +165,16 @@ class App extends Component {
           }
           action={<Undo style={{ color: '#ff4081', marginTop: '4px' }} />}
           autoHideDuration={4000}
-          onActionClick={() => this.setState(state => ({
-            interfaceLang: state.interfaceLang === 'ng' ? 'ru' : 'ng',
-            langSnackbar: false,
-            results: [{ description: langs[state.interfaceLang === 'ng' ? 'ru' : 'ng']['notFoundStub'] }],
-          }))}
+          onActionClick={() => this.setState(state => {
+            const newState = {
+              interfaceLang: state.interfaceLang === 'ng' ? 'ru' : 'ng',
+              langSnackbar: false,
+            }
+            if (this.state.results[0] && this.state.results[0].description === langs[state.interfaceLang]['notFoundStub']) {
+              newState.results = [{ description: langs[state.interfaceLang === 'ng' ? 'ru' : 'ng']['notFoundStub'] }]
+            }
+            return newState
+          })}
           onRequestClose={() => this.setState({ langSnackbar: false })}
         />
         <AppBar
