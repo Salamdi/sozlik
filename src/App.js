@@ -17,6 +17,8 @@ import * as langs from './langs'
 import Language from 'material-ui/svg-icons/action/language'
 import IconMenu from 'material-ui/IconMenu'
 import MenuItem from 'material-ui/MenuItem'
+import Done from 'material-ui/svg-icons/action/done'
+import Undo from 'material-ui/svg-icons/content/undo'
 
 class App extends Component {
   constructor(props) {
@@ -29,7 +31,10 @@ class App extends Component {
         searchVal: '',
         results: [],
         focus: false,
-        randomWords: {},
+        randomWords: {
+          'ng-ru': '',
+          'ru-ng': '',
+        },
         dictionary: 'ng-ru',
         interfaceLang: 'ru'
       }
@@ -38,6 +43,13 @@ class App extends Component {
   }
 
   componentDidMount() {
+    this.setState({
+      globalSpinner: false,
+      errSnackbar: false,
+      langSnackbar: false,
+      progresBar: false,
+      circularProgress: false,
+    })
     axios
       .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRandom`)
       .then(result => result.data)
@@ -56,7 +68,6 @@ class App extends Component {
   }
 
   search = (val) => {
-    console.log(this.state.dictionary)
     if (val) {
       this.setState({ progresBar: true })
       axios
@@ -78,13 +89,13 @@ class App extends Component {
       axios
         .get(`https://us-central1-ng-dictionary.cloudfunctions.net/${this.state.dictionary === 'ng-ru' ? 'getNg' : 'getRu'}?query=${this.state.searchVal}&start=0&count=30`)
         .then(result => result.data)
-        .then(response => this.setState({ results: response.data.length ? response.data : [{ term: '', description: 'Бу соьз соьзликте йок ):' }], circularProgress: false }))
+        .then(response => this.setState({ results: response.data.length ? response.data : [{ term: '', description: langs[this.state.interfaceLang]['notFoundStub'] }], circularProgress: false }))
         .catch(err => {
           console.error('error occured:', err)
           this.setState({ circularProgress: false })
-          if (err.message === 'Failed to fetch' || err.message === 'Network Error') {
+          if (err.message === 'Failed to fetch' || err.message === 'Network Error') { // TODO: check fetch network errors (remove or leave 'Failed to fecth' error message check)
             console.log(err.message)
-            this.setState({ snackbar: true })
+            this.setState({ errSnackbar: true })
           }
         })
     }
@@ -140,12 +151,26 @@ class App extends Component {
           </p>
         </Drawer>
         <Snackbar
-          open={this.state.snackbar || false}
+          open={this.state.errSnackbar || false}
           message={langs[this.state.interfaceLang]['connectionError']}
-          action={langs[this.state.interfaceLang]['connectionErrorAction']}
+          action={<Done style={{ color: '#ff4081', marginTop: '4px' }} />}
           autoHideDuration={4000}
-          onActionClick={() => this.setState({ snackbar: false })}
-          onRequestClose={() => this.setState({ snackbar: false })}
+          onActionClick={() => this.setState({ errSnackbar: false })}
+          onRequestClose={() => this.setState({ errSnackbar: false })}
+        />
+        <Snackbar
+          open={this.state.langSnackbar || false}
+          message={
+            `${langs[this.state.interfaceLang]['interfaceLangChange']}: ${langs[this.state.interfaceLang][this.state.interfaceLang === 'ng' ? 'interfaceLangNg' : 'interfaceLangRu']}`
+          }
+          action={<Undo style={{ color: '#ff4081', marginTop: '4px' }} />}
+          autoHideDuration={4000}
+          onActionClick={() => this.setState(state => ({
+            interfaceLang: state.interfaceLang === 'ng' ? 'ru' : 'ng',
+            langSnackbar: false,
+            results: [{ description: langs[state.interfaceLang === 'ng' ? 'ru' : 'ng']['notFoundStub'] }],
+          }))}
+          onRequestClose={() => this.setState({ langSnackbar: false })}
         />
         <AppBar
           style={{
@@ -162,7 +187,22 @@ class App extends Component {
                   <Language />
                 </IconButton>
               }
-              onChange={(event, value) => this.setState({interfaceLang: value})}
+              onChange={(event, value) => {
+                this.setState({ globalSpinner: true })
+                setTimeout(() => {
+                  this.setState(state => {
+                    const newState = {
+                      interfaceLang: value,
+                      globalSpinner: false,
+                      langSnackbar: true,
+                    }
+                    if (this.state.results[0] && this.state.results[0].description === langs[state.interfaceLang]['notFoundStub']) {
+                      newState.results = [{ description: langs[value]['notFoundStub'] }]
+                    }
+                    return newState
+                  })
+                }, 1000)
+              }}
               value={this.state.interfaceLang}
             >
               <MenuItem
@@ -225,6 +265,15 @@ class App extends Component {
                 }
               </main>
             )
+        }
+        {
+          this.state.globalSpinner
+            ? (
+              <div className='global-spinner'>
+                <CircularProgress size={100} thickness={8} />
+              </div>
+            )
+            : null
         }
       </div>
     );

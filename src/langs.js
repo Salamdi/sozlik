@@ -6,18 +6,20 @@ export const ng = {
     'ru-ng': 'орысша - ногайша',
     interfaceLangNg: 'Ногайша',
     interfaceLangRu: 'Орысша',
-    connectionError: 'Серверман косылмага болынмады...',
-    connectionErrorAction: 'Аьруьв'
+    connectionError: 'Интернет йок ):',
+    notFoundStub: 'Келисетаган бир соьзде табылмады ):',
+    interfaceLangChange: 'Интерфейс',
 }
 
 export const ru = {
     title: 'Словарь',
-    label: 'Какое слово ищем?',
+    label: 'Введите слово для поиска',
     hint: 'Например',
     'ng-ru': 'ногайско - русский',
     'ru-ng': 'русско - ногайский',
     interfaceLangNg: 'Ногайский',
     interfaceLangRu: 'Русский',
-    connectionError: 'Не удалось соединиться с сервером...',
-    connectionErrorAction: 'Ясно'
+    connectionError: 'Интернета нет ):',
+    notFoundStub: 'Не найдено ни одного подходящего слова ):',
+    interfaceLangChange: 'Интерфейс',
 }
