@@ -13,12 +13,16 @@ import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton'
 import NavigationClose from 'material-ui/svg-icons/navigation/close'
 import IconButton from 'material-ui/IconButton'
 import Snackbar from 'material-ui/Snackbar'
+import * as langs from './langs'
+import Language from 'material-ui/svg-icons/action/language'
+import IconMenu from 'material-ui/IconMenu'
+import MenuItem from 'material-ui/MenuItem'
 
 class App extends Component {
   constructor(props) {
     super(props)
     const preserverState = localStorage.getItem('preservedState') && JSON.parse(localStorage.getItem('preservedState'))
-    this.state = preserverState && preserverState.randomWords
+    this.state = preserverState && preserverState.randomWords && preserverState.interfaceLang
       ? preserverState
       : {
         dataSource: [],
@@ -26,7 +30,8 @@ class App extends Component {
         results: [],
         focus: false,
         randomWords: {},
-        dictionary: 'ng-ru'
+        dictionary: 'ng-ru',
+        interfaceLang: 'ru'
       }
     this.search = debounce(this.search, 400)
     this.saveState = debounce(this.saveState, 1000)
@@ -123,11 +128,11 @@ class App extends Component {
           >
             <RadioButton
               value='ng-ru'
-              label='ногайша - орысша'
+              label={langs[this.state.interfaceLang]['ng-ru']}
             />
             <RadioButton
               value='ru-ng'
-              label='орысша - ногайша'
+              label={langs[this.state.interfaceLang]['ru-ng']}
             />
           </RadioButtonGroup>
           <p className='copyright'>
@@ -136,8 +141,8 @@ class App extends Component {
         </Drawer>
         <Snackbar
           open={this.state.snackbar || false}
-          message='Серверман косылмага болынмады...'
-          action='аьруьв'
+          message={langs[this.state.interfaceLang]['connectionError']}
+          action={langs[this.state.interfaceLang]['connectionErrorAction']}
           autoHideDuration={4000}
           onActionClick={() => this.setState({ snackbar: false })}
           onRequestClose={() => this.setState({ snackbar: false })}
@@ -148,8 +153,28 @@ class App extends Component {
             top: this.state.focus ? -64 : 0,
             transition: 'all ease 0.4s'
           }}
-          title='Соьзлик'
+          title={langs[this.state.interfaceLang]['title']}
           onLeftIconButtonClick={event => this.setState({ drawer: true })}
+          iconElementRight={
+            <IconMenu
+              iconButtonElement={
+                <IconButton>
+                  <Language />
+                </IconButton>
+              }
+              onChange={(event, value) => this.setState({interfaceLang: value})}
+              value={this.state.interfaceLang}
+            >
+              <MenuItem
+                primaryText={langs[this.state.interfaceLang]['interfaceLangRu']}
+                value='ru'
+              />
+              <MenuItem
+                primaryText={langs[this.state.interfaceLang]['interfaceLangNg']}
+                value='ng'
+              />
+            </IconMenu>
+          }
         />
         <div className='top-container'>
           <div className='progress-bar'>
@@ -159,8 +184,8 @@ class App extends Component {
             <AutoComplete
               onFocus={() => this.setState({ focus: true })}
               onBlur={() => this.setState({ focus: false })}
-              hintText={`Мысалы: ${this.state.randomWords[this.state.dictionary]}`}
-              floatingLabelText='Кайсы соьзди излейсинъиз?'
+              hintText={`${langs[this.state.interfaceLang]['hint']}: ${this.state.randomWords[this.state.dictionary]}`}
+              floatingLabelText={langs[this.state.interfaceLang]['label']}
               dataSource={this.state.dataSource}
               onUpdateInput={this.handleUpdate}
               dataSourceConfig={{ text: 'term', value: 'description' }}
