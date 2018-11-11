@@ -178,11 +178,6 @@ class App extends Component {
           onRequestClose={() => this.setState({ langSnackbar: false })}
         />
         <AppBar
-          style={{
-            position: 'fixed',
-            top: this.state.focus ? -64 : 0,
-            transition: 'all ease 0.4s'
-          }}
           title={langs[this.state.interfaceLang]['title']}
           onLeftIconButtonClick={event => this.setState({ drawer: true })}
           iconElementRight={
