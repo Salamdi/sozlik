@@ -5,7 +5,6 @@ html, body {
 }
 
 .App {
-  margin-top: 0;
   transition: transform 0.4s ease;
 }
 
@@ -33,7 +32,6 @@ html, body {
 }
 
 .top-container {
-  margin-top: 64px;
   position: relative;
 }
 
