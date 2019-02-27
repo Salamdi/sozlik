@@ -183,8 +183,8 @@ class App extends Component {
               },
               langSnackbar: false,
             }
-            if (this.state.results[0] && this.state.results[0].description === langs[state.interfaceLang.current]['notFoundStub']) {
-              newState.results = [{ description: langs[state.interfaceLang.current === 'ng' ? 'ru' : 'ng']['notFoundStub'] }]
+            if (state.results[0] && state.results[0].description === langs[state.interfaceLang.current]['notFoundStub']) {
+              newState.results = [{ description: langs[state.interfaceLang.prev]['notFoundStub'] }];
             }
             return newState
           })}
