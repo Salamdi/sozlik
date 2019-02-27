@@ -20,12 +20,19 @@ import MenuItem from 'material-ui/MenuItem'
 import Done from 'material-ui/svg-icons/action/done'
 import Undo from 'material-ui/svg-icons/content/undo'
 
+function capitalize(str) {
+  return str[0].toUpperCase() + str.slice(1);
+}
+
 class App extends Component {
   constructor(props) {
     super(props)
-    const preserverState = localStorage.getItem('preservedState') && JSON.parse(localStorage.getItem('preservedState'))
-    this.state = preserverState && preserverState.randomWords && preserverState.interfaceLang
-      ? preserverState
+    const preservedState = JSON.parse(localStorage.getItem('preservedState'));
+    let {interfaceLang} = preservedState ? preservedState : {};
+    interfaceLang = interfaceLang instanceof Object ? interfaceLang : {current: interfaceLang, prev: interfaceLang === 'ng' ? 'en' : 'ng'};
+    if (preservedState) preservedState.interfaceLang = interfaceLang;
+    this.state = preservedState && preservedState.randomWords && preservedState.interfaceLang
+      ? preservedState
       : {
         dataSource: [],
         searchVal: '',
@@ -36,7 +43,10 @@ class App extends Component {
           'ru-ng': '',
         },
         dictionary: 'ng-ru',
-        interfaceLang: 'ru'
+        interfaceLang: {
+          current: 'en',
+          prev: 'ng'
+        }
       }
     this.search = debounce(this.search, 400)
     this.saveState = debounce(this.saveState, 1000)
@@ -89,7 +99,7 @@ class App extends Component {
       axios
         .get(`https://us-central1-ng-dictionary.cloudfunctions.net/${this.state.dictionary === 'ng-ru' ? 'getNg' : 'getRu'}?query=${this.state.searchVal}&start=0&count=30`)
         .then(result => result.data)
-        .then(response => this.setState({ results: response.data.length ? response.data : [{ term: '', description: langs[this.state.interfaceLang]['notFoundStub'] }], circularProgress: false }))
+        .then(response => this.setState({ results: response.data.length ? response.data : [{ term: '', description: langs[this.state.interfaceLang.current]['notFoundStub'] }], circularProgress: false }))
         .catch(err => {
           console.error('error occured:', err)
           this.setState({ circularProgress: false })
@@ -139,11 +149,11 @@ class App extends Component {
           >
             <RadioButton
               value='ng-ru'
-              label={langs[this.state.interfaceLang]['ng-ru']}
+              label={langs[this.state.interfaceLang.current]['ng-ru']}
             />
             <RadioButton
               value='ru-ng'
-              label={langs[this.state.interfaceLang]['ru-ng']}
+              label={langs[this.state.interfaceLang.current]['ru-ng']}
             />
           </RadioButtonGroup>
           <p className='copyright'>
@@ -152,7 +162,7 @@ class App extends Component {
         </Drawer>
         <Snackbar
           open={this.state.errSnackbar || false}
-          message={langs[this.state.interfaceLang]['connectionError']}
+          message={langs[this.state.interfaceLang.current]['connectionError']}
           action={<Done style={{ color: '#ff4081', marginTop: '4px' }} />}
           autoHideDuration={4000}
           onActionClick={() => this.setState({ errSnackbar: false })}
@@ -161,29 +171,27 @@ class App extends Component {
         <Snackbar
           open={this.state.langSnackbar || false}
           message={
-            `${langs[this.state.interfaceLang]['interfaceLangChange']}: ${langs[this.state.interfaceLang][this.state.interfaceLang === 'ng' ? 'interfaceLangNg' : 'interfaceLangRu']}`
+            `${langs[this.state.interfaceLang.current]['interfaceLangChange']}: ${langs[this.state.interfaceLang.current]['interfaceLang' + capitalize(this.state.interfaceLang.current)]}`
           }
           action={<Undo style={{ color: '#ff4081', marginTop: '4px' }} />}
           autoHideDuration={4000}
           onActionClick={() => this.setState(state => {
             const newState = {
-              interfaceLang: state.interfaceLang === 'ng' ? 'ru' : 'ng',
+              interfaceLang: {
+                current: state.interfaceLang.prev,
+                prev: state.interfaceLang.current // no way to get the previous lang so set the current (swap them)
+              },
               langSnackbar: false,
             }
-            if (this.state.results[0] && this.state.results[0].description === langs[state.interfaceLang]['notFoundStub']) {
-              newState.results = [{ description: langs[state.interfaceLang === 'ng' ? 'ru' : 'ng']['notFoundStub'] }]
+            if (this.state.results[0] && this.state.results[0].description === langs[state.interfaceLang.current]['notFoundStub']) {
+              newState.results = [{ description: langs[state.interfaceLang.current === 'ng' ? 'ru' : 'ng']['notFoundStub'] }]
             }
             return newState
           })}
           onRequestClose={() => this.setState({ langSnackbar: false })}
         />
         <AppBar
-          style={{
-            position: 'fixed',
-            top: this.state.focus ? -64 : 0,
-            transition: 'all ease 0.4s'
-          }}
-          title={langs[this.state.interfaceLang]['title']}
+          title={langs[this.state.interfaceLang.current]['title']}
           onLeftIconButtonClick={event => this.setState({ drawer: true })}
           iconElementRight={
             <IconMenu
@@ -197,26 +205,33 @@ class App extends Component {
                 setTimeout(() => {
                   this.setState(state => {
                     const newState = {
-                      interfaceLang: value,
+                      interfaceLang: {
+                        current: value,
+                        prev: state.interfaceLang.current
+                      },
                       globalSpinner: false,
                       langSnackbar: true,
                     }
-                    if (this.state.results[0] && this.state.results[0].description === langs[state.interfaceLang]['notFoundStub']) {
+                    if (this.state.results[0] && this.state.results[0].description === langs[state.interfaceLang.current]['notFoundStub']) {
                       newState.results = [{ description: langs[value]['notFoundStub'] }]
                     }
                     return newState
                   })
                 }, 1000)
               }}
-              value={this.state.interfaceLang}
+              value={this.state.interfaceLang.current}
             >
               <MenuItem
-                primaryText={langs[this.state.interfaceLang]['interfaceLangRu']}
+                primaryText={langs[this.state.interfaceLang.current]['interfaceLangRu']}
                 value='ru'
               />
               <MenuItem
-                primaryText={langs[this.state.interfaceLang]['interfaceLangNg']}
+                primaryText={langs[this.state.interfaceLang.current]['interfaceLangNg']}
                 value='ng'
+              />
+              <MenuItem
+                primaryText={langs[this.state.interfaceLang.current]['interfaceLangEn']}
+                value='en'
               />
             </IconMenu>
           }
@@ -229,8 +244,8 @@ class App extends Component {
             <AutoComplete
               onFocus={() => this.setState({ focus: true })}
               onBlur={() => this.setState({ focus: false })}
-              hintText={`${langs[this.state.interfaceLang]['hint']}: ${this.state.randomWords[this.state.dictionary]}`}
-              floatingLabelText={langs[this.state.interfaceLang]['label']}
+              hintText={`${langs[this.state.interfaceLang.current]['hint']}: ${this.state.randomWords[this.state.dictionary]}`}
+              floatingLabelText={langs[this.state.interfaceLang.current]['label']}
               dataSource={this.state.dataSource}
               onUpdateInput={this.handleUpdate}
               dataSourceConfig={{ text: 'term', value: 'description' }}
