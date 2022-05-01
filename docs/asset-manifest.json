@@ -1,6 +1,6 @@
 {
-  "main.css": "static/css/main.c877feff.css",
-  "main.css.map": "static/css/main.c877feff.css.map",
-  "main.js": "static/js/main.6de6468d.js",
-  "main.js.map": "static/js/main.6de6468d.js.map"
+  "main.css": "./static/css/main.c877feff.css",
+  "main.css.map": "./static/css/main.c877feff.css.map",
+  "main.js": "./static/js/main.6de6468d.js",
+  "main.js.map": "./static/js/main.6de6468d.js.map"
 }
