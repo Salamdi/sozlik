@@ -61,7 +61,7 @@ class App extends Component {
       circularProgress: false,
     })
     axios
-      .get(`https://us-central1-ng-dictionary.cloudfunctions.net/getRandom`)
+      .get(`https://immense-cove-36116.herokuapp.com/random`)
       .then(result => result.data)
       .then(randomWords => this.setState({ randomWords }))
       .catch(err => {
@@ -81,9 +81,9 @@ class App extends Component {
     if (val) {
       this.setState({ progresBar: true })
       axios
-        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/${this.state.dictionary === 'ng-ru' ? 'getNg' : 'getRu'}?query=${val}&start=0&count=3`)
+        .get(`https://immense-cove-36116.herokuapp.com/ng-ru/${val}`)
         .then(result => result.data)
-        .then(response => this.setState({ dataSource: response.data, progresBar: false }))
+        .then(response => this.setState({ dataSource: response, progresBar: false }))
         .catch(err => {
           console.error(err)
           this.setState({ progresBar: false })
@@ -97,9 +97,9 @@ class App extends Component {
     } else {
       this.setState({ circularProgress: true })
       axios
-        .get(`https://us-central1-ng-dictionary.cloudfunctions.net/${this.state.dictionary === 'ng-ru' ? 'getNg' : 'getRu'}?query=${this.state.searchVal}&start=0&count=30`)
+        .get(`https://immense-cove-36116.herokuapp.com/ng-ru/${this.state.searchVal}`)
         .then(result => result.data)
-        .then(response => this.setState({ results: response.data.length ? response.data : [{ term: '', description: langs[this.state.interfaceLang.current]['notFoundStub'] }], circularProgress: false }))
+        .then(response => this.setState({ results: response.length ? response : [{ word: '', translation: langs[this.state.interfaceLang.current]['notFoundStub'] }], circularProgress: false }))
         .catch(err => {
           console.error('error occured:', err)
           this.setState({ circularProgress: false })
@@ -151,10 +151,6 @@ class App extends Component {
               value='ng-ru'
               label={langs[this.state.interfaceLang.current]['ng-ru']}
             />
-            <RadioButton
-              value='ru-ng'
-              label={langs[this.state.interfaceLang.current]['ru-ng']}
-            />
           </RadioButtonGroup>
           <p className='copyright'>
             © Dinislam
@@ -183,8 +179,8 @@ class App extends Component {
               },
               langSnackbar: false,
             }
-            if (state.results[0] && state.results[0].description === langs[state.interfaceLang.current]['notFoundStub']) {
-              newState.results = [{ description: langs[state.interfaceLang.prev]['notFoundStub'] }];
+            if (state.results[0] && state.results[0].translation === langs[state.interfaceLang.current]['notFoundStub']) {
+              newState.results = [{ translation: langs[state.interfaceLang.prev]['notFoundStub'] }];
             }
             return newState
           })}
@@ -212,8 +208,8 @@ class App extends Component {
                       globalSpinner: false,
                       langSnackbar: true,
                     }
-                    if (this.state.results[0] && this.state.results[0].description === langs[state.interfaceLang.current]['notFoundStub']) {
-                      newState.results = [{ description: langs[value]['notFoundStub'] }]
+                    if (this.state.results[0] && this.state.results[0].translation === langs[state.interfaceLang.current]['notFoundStub']) {
+                      newState.results = [{ translation: langs[value]['notFoundStub'] }]
                     }
                     return newState
                   })
@@ -244,11 +240,11 @@ class App extends Component {
             <AutoComplete
               onFocus={() => this.setState({ focus: true })}
               onBlur={() => this.setState({ focus: false })}
-              hintText={`${langs[this.state.interfaceLang.current]['hint']}: ${this.state.randomWords[this.state.dictionary]}`}
+              hintText={`${langs[this.state.interfaceLang.current]['hint']}: ${this.state.randomWords.word}`}
               floatingLabelText={langs[this.state.interfaceLang.current]['label']}
               dataSource={this.state.dataSource}
               onUpdateInput={this.handleUpdate}
-              dataSourceConfig={{ text: 'term', value: 'description' }}
+              dataSourceConfig={{ text: 'word', value: 'translation' }}
               onNewRequest={this.handleRequest}
               filter={AutoComplete.caseInsensitiveFilter}
               searchText={this.state.searchVal}
@@ -275,10 +271,10 @@ class App extends Component {
               <main className='result'>
                 {
                   this.state.results.map(res => (
-                    <Card key={res.description}>
-                      <CardHeader subtitle={res.term} />
+                    <Card key={res.translation}>
+                      <CardHeader subtitle={res.word} />
                       <CardText>
-                        {res.description}
+                        {res.translation}
                       </CardText>
                     </Card>
                   ))
